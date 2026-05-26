@@ -11,7 +11,7 @@
 ### 📌 协作核心规则
 1. **Git 分支命名**：统一使用**姓名全拼全小写_ai**（例如：张三的分支命名为 `zhangsan_ai`）。
 2. **作业目录结构**：在根目录 `zuoye/` 文件夹下创建与自己分支同名的文件夹：`zuoye/姓名全拼_ai/`（例如：`zuoye/zhangsan_ai/`）。
-3. **隔离提交流程**：在本地创建个人分支 -> 复制 `zuoye` 目录下的初始文件到自己专属的命名文件夹中 -> 编写并运行测试 -> 提交并直接推送个人分支到 GitHub 即可（无需在网页端创建 Pull Request 合并请求）。
+3. **隔离提交流程**：在本地创建个人分支 -> 在 `zuoye/` 目录下创建自己专属的命名文件夹并编写作业 -> 编写并运行测试 -> 提交并直接推送个人分支到 GitHub 即可（无需在网页端创建 Pull Request 合并请求）。
 
 ### 📊 Git 协作流程图 (Mermaid)
 
@@ -21,9 +21,9 @@ gitGraph
     branch zhangsan_ai
     branch lisi_ai
     checkout zhangsan_ai
-    commit id: "Copy files & write zhangsan code"
+    commit id: "Create directory & write zhangsan code"
     checkout lisi_ai
-    commit id: "Copy files & write lisi code"
+    commit id: "Create directory & write lisi code"
 ```
 
 具体的操作步骤，对应的分支协作生命周期如下：
@@ -31,8 +31,8 @@ gitGraph
 ```mermaid
 graph TD
     A[1. 克隆远程仓库 main 分支] --> B[2. 本地创建并切换至个人分支: 姓名全拼_ai]
-    B --> C[3. 在 zuoye/ 下创建个人文件夹: 姓名全拼_ai, 复制初始文件]
-    C --> D[4. 本地补全代码并测试运行]
+    B --> C[3. 在 zuoye/ 下创建个人文件夹: 姓名全拼_ai]
+    C --> D[4. 在个人文件夹内编写代码并测试运行]
     D --> E[5. git add 仅添加自己的个人目录]
     E --> F[6. git commit & git push 推送个人分支到 GitHub 结束]
 ```
@@ -53,19 +53,7 @@ cd ZJSZJD_502_AI
 git checkout -b zhangsan_ai
 ```
 
-#### 步骤 3：初始化作业文件夹
-1. 复制 `zuoye/` 目录下的 `main.py`、`rag_service.py` 文件和 `templates/` 目录（注意：不要复制其他同学的分支文件夹）。
-2. 在 `zuoye/` 目录下创建你的专属运行文件夹（例如：`zuoye/zhangsan_ai/`）。
-3. 将复制的代码粘贴到该目录下。你的个人开发目录结构应该为：
-   * 📂 `zuoye/`
-     * 📂 `zhangsan_ai/`  *(你的专属文件夹)*
-       * 📄 `main.py` *(需补全代码的 FastAPI 服务端主程序)*
-       * 📄 `rag_service.py` *(需补全代码的 RAG 检索问答逻辑)*
-       * 📂 `templates/`
-         * 📄 `index.html` *(已经编写好的前端页面，无需修改)*
-       * 📂 `uploads/` *(临时上传文件存储路径)*
-
-#### 步骤 4：提交与推送个人分支
+#### 步骤 3：提交与推送个人分支
 作业编写并测试无误后，返回仓库根目录，将你的分支推送至 GitHub 远程仓库：
 ```bash
 # 1. 检查修改文件，确保只修改了自己目录下的文件
