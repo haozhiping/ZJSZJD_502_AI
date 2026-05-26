@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>企业知识大脑 - 智能文档中心与多Agent协同系统</title>
+    <style>
+        :root {
+            --bg-gradient: radial-gradient(circle at 50% 50%, #1e1b4b 0%, #090d16 100%);
+            --glass-bg: rgba(15, 23, 42, 0.55);
+            --glass-border: rgba(255, 255, 255, 0.07);
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --primary-glow: rgba(99, 102, 241, 0.15);
+            --success: #10b981;
+            --success-glow: rgba(16, 185, 129, 0.15);
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-muted: #64748b;
+            --sidebar-width: 320px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* App Container */
+        .app-container {
+            width: 95vw;
+            height: 90vh;
+            max-width: 1400px;
+            max-height: 850px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            display: flex;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: var(--sidebar-width);
+            border-right: 1px solid var(--glass-border);
+            background: rgba(10, 15, 30, 0.4);
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            flex-shrink: 0;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+
+        .logo-icon {
+            font-size: 28px;
+            background: linear-gradient(135deg, #818cf8 0%, #c084fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: pulse 3s infinite ease-in-out;
+        }
+
+        .logo-text h1 {
+            font-size: 18px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            background: linear-gradient(to right, #f8fafc, #cbd5e1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .logo-text p {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        /* Config Card */
+        .config-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* Select styling */
+        .rag-selector {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .selector-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid var(--glass-border);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 13px;
+        }
+
+        .selector-item.active {
+            background: var(--primary-glow);
+            border-color: var(--primary);
+            color: var(--text-primary);
+        }
+
+        .selector-item.locked {
+            opacity: 0.5;
+            cursor: not-allowed;
+            color: var(--text-muted);
+        }
+
+        .lock-badge {
+            font-size: 10px;
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--warning);
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid rgba(245, 158, 11, 0.25);
+        }
+
+        /* Upload Area */
+        .upload-area {
+            border: 2px dashed var(--glass-border);
+            border-radius: 16px;
+            padding: 20px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.01);
+            margin-bottom: 24px;
+        }
+
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.03);
+        }
+
+        .upload-icon {
+            font-size: 28px;
+            color: var(--text-secondary);
+        }
+
+        .upload-area p {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .upload-area span {
+            font-size: 10px;
+            color: var(--text-muted);
+        }
+
+        #file-input {
+            display: none;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 2px;
+            overflow: hidden;
+            display: none;
+            margin-top: 8px;
+        }
+
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #818cf8, #c084fc);
+            transition: width 0.3s ease;
+        }
+
+        /* Stats list */
+        .stats-list {
+            margin-top: auto;
+            border-top: 1px solid var(--glass-border);
+            padding-top: 20px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        /* Chat Container */
+        .chat-container {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(15, 23, 42, 0.2);
+        }
+
+        /* Chat Header */
+        .chat-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--glass-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 15, 30, 0.2);
+        }
+
+        .chat-title h2 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .chat-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: var(--success);
+            box-shadow: 0 0 10px var(--success-glow);
+        }
+
+        /* Chat Messages area */
+        .chat-messages {
+            flex-grow: 1;
+            padding: 24px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Custom Scrollbar */
+        .chat-messages::-webkit-scrollbar,
+        .sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .chat-messages::-webkit-scrollbar-track,
+        .sidebar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .chat-messages::-webkit-scrollbar-thumb,
+        .sidebar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 3px;
+        }
+
+        .message {
+            display: flex;
+            gap: 16px;
+            max-width: 80%;
+            animation: fadeIn 0.3s ease-out forwards;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message.assistant {
+            align-self: flex-start;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .message.user .avatar {
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: white;
+        }
+
+        .message.assistant .avatar {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            color: #818cf8;
+        }
+
+        .message-content-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .message-bubble {
+            padding: 12px 16px;
+            border-radius: 16px;
+            font-size: 14px;
+            line-height: 1.6;
+            word-break: break-all;
+        }
+
+        .message.user .message-bubble {
+            background: var(--primary);
+            color: white;
+            border-top-right-radius: 4px;
+            box-shadow: 0 4px 12px var(--primary-glow);
+        }
+
+        .message.assistant .message-bubble {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--glass-border);
+            color: #e2e8f0;
+            border-top-left-radius: 4px;
+        }
+
+        /* Sources accordion */
+        .sources-accordion {
+            margin-top: 4px;
+            border: 1px solid var(--glass-border);
+            border-radius: 8px;
+            overflow: hidden;
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .accordion-header {
+            padding: 8px 12px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.01);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+            transition: background 0.2s;
+        }
+
+        .accordion-header:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .accordion-header::after {
+            content: "▼";
+            font-size: 8px;
+            transition: transform 0.2s;
+        }
+
+        .accordion-header.open::after {
+            transform: rotate(180deg);
+        }
+
+        .accordion-content {
+            display: none;
+            padding: 8px 12px;
+            border-top: 1px solid var(--glass-border);
+            font-size: 11px;
+            color: var(--text-muted);
+            max-height: 150px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .accordion-content.open {
+            display: block;
+        }
+
+        .source-item {
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+        }
+
+        .source-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .source-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 4px;
+            font-weight: 500;
+        }
+
+        .source-index {
+            color: var(--primary);
+        }
+
+        .source-distance {
+            background: rgba(99, 102, 241, 0.1);
+            color: #818cf8;
+            padding: 1px 4px;
+            border-radius: 4px;
+            font-size: 9px;
+        }
+
+        .source-text {
+            line-height: 1.4;
+            color: var(--text-secondary);
+        }
+
+        /* Loading spinner */
+        .typing-loader {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            padding: 12px 16px;
+        }
+
+        .typing-loader span {
+            display: block;
+            width: 6px;
+            height: 6px;
+            background-color: var(--text-secondary);
+            border-radius: 50%;
+            animation: typing 1s infinite ease-in-out;
+        }
+
+        .typing-loader span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-loader span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        /* Input Area */
+        .chat-input-area {
+            padding: 24px;
+            border-top: 1px solid var(--glass-border);
+            background: rgba(10, 15, 30, 0.3);
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 6px 6px 6px 16px;
+            align-items: center;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .input-wrapper:focus-within {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-glow);
+        }
+
+        .chat-input {
+            flex-grow: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-primary);
+            font-size: 14px;
+            height: 40px;
+        }
+
+        .chat-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .send-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .send-btn:hover {
+            background: var(--primary-hover);
+            transform: scale(1.03);
+        }
+
+        .send-btn:active {
+            transform: scale(0.97);
+        }
+
+        .send-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: white;
+            transition: transform 0.2s;
+        }
+
+        .send-btn:hover svg {
+            transform: translateX(2px) translateY(-1px);
+        }
+
+        /* Notifications */
+        .toast {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(15, 23, 42, 0.9);
+            border: 1px solid var(--glass-border);
+            border-left: 4px solid var(--primary);
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+            animation: slideIn 0.3s ease forwards;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(120%);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+                filter: drop-shadow(0 0 2px var(--primary-glow));
+            }
+
+            50% {
+                transform: scale(1.05);
+                filter: drop-shadow(0 0 8px rgba(129, 140, 248, 0.4));
+            }
+        }
+
+        @keyframes typing {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-6px);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <!-- Logo Section -->
+            <div class="logo-area">
+                <span class="logo-icon">🧠</span>
+                <div class="logo-text">
+                    <h1>企业知识大脑</h1>
+                    <p>Phase 1.0 - Native RAG</p>
+                </div>
+            </div>
+
+            <!-- RAG Stage Selector -->
+            <div class="config-card">
+                <div class="card-title">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                    </svg>
+                    演进阶段
+                </div>
+                <div class="rag-selector">
+                    <div class="selector-item active" title="当前使用的原生RAG代码">
+                        <span>Native RAG 基础</span>
+                        <span style="font-size: 10px; color: var(--success);">活动</span>
+                    </div>
+                    <div class="selector-item locked" title="第2天重磅推出">
+                        <span>LlamaIndex RAG</span>
+                        <span class="lock-badge">Day 2 锁定</span>
+                    </div>
+                    <div class="selector-item locked" title="第3天重磅推出">
+                        <span>Graph RAG 图谱</span>
+                        <span class="lock-badge">Day 3 锁定</span>
+                    </div>
+                    <div class="selector-item locked" title="第4天重磅推出">
+                        <span>Agentic RAG 自适应</span>
+                        <span class="lock-badge">Day 4 锁定</span>
+                    </div>
+                    <div class="selector-item locked" title="下周10天Agent课程重头戏">
+                        <span>Multi-Agent 协作</span>
+                        <span class="lock-badge">下周 锁定</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- File Upload Box -->
+            <div class="config-card">
+                <div class="card-title">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12" />
+                    </svg>
+                    知识库入库
+                </div>
+                <div class="upload-area" id="drop-zone">
+                    <span class="upload-icon">📥</span>
+                    <p>拖拽 PDF 到这里，或者点击上传</p>
+                    <span>只支持 .pdf 文件</span>
+                    <input type="file" id="file-input" accept=".pdf">
+                    <!-- Progress Bar -->
+                    <div class="progress-container" id="progress-container">
+                        <div class="progress-bar" id="progress-bar"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Module -->
+            <div class="stats-list">
+                <div class="stat-item">
+                    <span>当前知识集合:</span>
+                    <span class="stat-value" id="stat-collection">-</span>
+                </div>
+                <div class="stat-item">
+                    <span>已保存知识切片:</span>
+                    <span class="stat-value" id="stat-chunks">0 条</span>
+                </div>
+                <div class="stat-item">
+                    <span>向量模型:</span>
+                    <span class="stat-value">Qwen-embedding</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Main Area -->
+        <div class="chat-container">
+            <!-- Header -->
+            <div class="chat-header">
+                <div class="chat-title">
+                    <h2>智能知识检索中心</h2>
+                </div>
+                <div class="chat-status">
+                    <span class="status-dot"></span>
+                    <span>系统状态: 正常运行中</span>
+                </div>
+            </div>
+
+            <!-- Messages Box -->
+            <div class="chat-messages" id="chat-messages">
+                <!-- Welcome Message -->
+                <div class="message assistant">
+                    <div class="avatar">🤖</div>
+                    <div class="message-content-wrapper">
+                        <div class="message-bubble">
+                            你好！我是<strong>企业知识大脑</strong>。请在左侧上传你的 PDF 格式参考资料，上传成功并向量化入库后，你就可以向我提问关于这份资料的任何问题了！
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chat Input Area -->
+            <div class="chat-input-area">
+                <div class="input-wrapper">
+                    <input type="text" class="chat-input" id="chat-input" placeholder="输入问题查询本地知识库..."
+                        autocomplete="off">
+                    <button class="send-btn" id="send-btn" title="发送">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div id="toast-container"></div>
+
+    <script>
+        // DOM Elements
+        const chatMessages = document.getElementById('chat-messages');
+        const chatInput = document.getElementById('chat-input');
+        const sendBtn = document.getElementById('send-btn');
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const progressBar = document.getElementById('progress-bar');
+        const progressContainer = document.getElementById('progress-container');
+        const statCollection = document.getElementById('stat-collection');
+        const statChunks = document.getElementById('stat-chunks');
+        const toastContainer = document.getElementById('toast-container');
+
+        // Check DB Stats on page load
+        window.addEventListener('load', fetchStats);
+
+        // Fetch db statistics from API
+        async function fetchStats() {
+            try {
+                const response = await fetch('/api/docs');
+                if (response.ok) {
+                    const data = await response.json();
+                    statCollection.textContent = data.collection_name;
+                    statChunks.textContent = `${data.total_chunks} 条`;
+                }
+            } catch (err) {
+                console.error("无法获取知识库状态统计:", err);
+            }
+        }
+
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            if (type === 'error') {
+                toast.style.borderLeftColor = 'var(--danger)';
+            }
+            toast.innerHTML = `<span>${type === 'success' ? '✅' : '❌'}</span> <span>${message}</span>`;
+            toastContainer.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.animation = 'fadeIn 0.3s ease reverse forwards';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Handle Send message
+        async function handleSend() {
+            const text = chatInput.value.trim();
+            if (!text) return;
+
+            // Clear Input
+            chatInput.value = '';
+
+            // Render User Message
+            renderMessage(text, 'user');
+
+            // Render Assistant Typing Indicator
+            const loaderId = renderLoader();
+            scrollChatToBottom();
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: text })
+                });
+
+                // Remove Loader
+                document.getElementById(loaderId).remove();
+
+                if (response.ok) {
+                    const data = await response.json();
+                    renderMessage(data.answer, 'assistant', data.sources);
+                } else {
+                    const errData = await response.json();
+                    renderMessage(`⚠️ 错误：${errData.detail || '问答服务响应异常'}`, 'assistant');
+                }
+            } catch (err) {
+                // Remove Loader
+                if (document.getElementById(loaderId)) document.getElementById(loaderId).remove();
+                renderMessage(`❌ 网络请求失败，请确保后端服务正常运行！\n原因: ${err.message}`, 'assistant');
+            }
+
+            scrollChatToBottom();
+        }
+
+        // Send triggers
+        sendBtn.addEventListener('click', handleSend);
+        chatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') handleSend();
+        });
+
+        // Render standard message bubble
+        function renderMessage(text, sender, sources = null) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${sender}`;
+
+            const avatarDiv = document.createElement('div');
+            avatarDiv.className = 'avatar';
+            avatarDiv.textContent = sender === 'user' ? '🧑' : '🤖';
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'message-content-wrapper';
+
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
+            // Replace newlines with HTML linebreaks for display
+            bubble.innerHTML = text.replace(/\n/g, '<br>');
+
+            wrapper.appendChild(bubble);
+
+            // If sources exist and are not empty, append sources accordion
+            if (sources && sources.length > 0) {
+                const accordion = document.createElement('div');
+                accordion.className = 'sources-accordion';
+
+                const accordionHeader = document.createElement('div');
+                accordionHeader.className = 'accordion-header';
+                accordionHeader.textContent = `查看引用的本地知识库片段 (${sources.length} 条)`;
+
+                const accordionContent = document.createElement('div');
+                accordionContent.className = 'accordion-content';
+
+                sources.forEach((src, idx) => {
+                    const srcItem = document.createElement('div');
+                    srcItem.className = 'source-item';
+                    srcItem.innerHTML = `
+                        <div class="source-meta">
+                            <span class="source-index">#段落切片 ${idx + 1}</span>
+                            <span class="source-distance">相似距离: ${src.distance.toFixed(4)}</span>
+                        </div>
+                        <div class="source-text">${src.content.replace(/\n/g, '<br>')}</div>
+                    `;
+                    accordionContent.appendChild(srcItem);
+                });
+
+                accordionHeader.addEventListener('click', () => {
+                    accordionHeader.classList.toggle('open');
+                    accordionContent.classList.toggle('open');
+                    scrollChatToBottom();
+                });
+
+                accordion.appendChild(accordionHeader);
+                accordion.appendChild(accordionContent);
+                wrapper.appendChild(accordion);
+            }
+
+            msgDiv.appendChild(avatarDiv);
+            msgDiv.appendChild(wrapper);
+            chatMessages.appendChild(msgDiv);
+            scrollChatToBottom();
+        }
+
+        // Render loader bubble
+        function renderLoader() {
+            const loaderId = `loader_${Date.now()}`;
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'message assistant';
+            msgDiv.id = loaderId;
+
+            const avatarDiv = document.createElement('div');
+            avatarDiv.className = 'avatar';
+            avatarDiv.textContent = '🤖';
+
+            const wrapper = document.createElement('div');
+            wrapper.className = 'message-content-wrapper';
+
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
+            bubble.style.padding = '0';
+
+            const loader = document.createElement('div');
+            loader.className = 'typing-loader';
+            loader.innerHTML = '<span></span><span></span><span></span>';
+
+            bubble.appendChild(loader);
+            wrapper.appendChild(bubble);
+            msgDiv.appendChild(avatarDiv);
+            msgDiv.appendChild(wrapper);
+            chatMessages.appendChild(msgDiv);
+            return loaderId;
+        }
+
+        // Scroll chat messages to bottom
+        function scrollChatToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        // Handle Drag & Drop Upload
+        dropZone.addEventListener('click', () => fileInput.click());
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = 'var(--primary)';
+            dropZone.style.background = 'rgba(99, 102, 241, 0.05)';
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.style.borderColor = 'var(--glass-border)';
+            dropZone.style.background = 'rgba(255, 255, 255, 0.01)';
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = 'var(--glass-border)';
+            dropZone.style.background = 'rgba(255, 255, 255, 0.01)';
+
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileUpload(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFileUpload(e.target.files[0]);
+            }
+        });
+
+        // Upload file function
+        async function handleFileUpload(file) {
+            if (!file.name.toLowerCase().endsWith('.pdf')) {
+                showToast("仅支持 PDF 文件！", "error");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // Show progress
+            progressContainer.style.display = 'block';
+            progressBar.style.width = '30%';
+
+            try {
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                progressBar.style.width = '70%';
+
+                if (response.ok) {
+                    const data = await response.json();
+                    progressBar.style.width = '100%';
+                    setTimeout(() => {
+                        progressContainer.style.display = 'none';
+                        progressBar.style.width = '0%';
+                    }, 500);
+
+                    showToast(`文件《${data.filename}》上传并向量化成功！生成 ${data.chunks_count} 个切片。`, 'success');
+
+                    // Refresh stats
+                    fetchStats();
+
+                    // Append notice to chat
+                    renderMessage(`📢 系统通知：我已经成功学习了文档《<strong>${data.filename}</strong>》，并将其拆分为 <strong>${data.chunks_count}</strong> 个知识切片保存入库。你可以随时向我提问与之相关的内容！`, 'assistant');
+                } else {
+                    const errData = await response.json();
+                    showToast(`上传失败：${errData.detail || '未知原因'}`, 'error');
+                    progressContainer.style.display = 'none';
+                }
+            } catch (err) {
+                showToast(`上传失败，请检查网络或后端状态：${err.message}`, 'error');
+                progressContainer.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+
+</html>
