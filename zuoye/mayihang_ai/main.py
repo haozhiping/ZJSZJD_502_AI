@@ -76,16 +76,23 @@ async def api_upload_pdf(file: UploadFile = File(...)):
 @app.post("/api/chat")
 async def api_chat(request: ChatRequest):
     """
-    接收用户的提问，呼叫 rag_service.py 去寻找答案，并将最终的 AI 回答和引用的原文片段组装成 JSON 返回给前端。
+    接收用户的提问，呼叫 rag_service.py 去寻找答案，并将最终的 AI 回答、
+    引用的原文片段以及优化策略信息组装成 JSON 返回给前端。
     """
     if not request.message.strip():
         raise HTTPException(status_code=400, detail="查询内容不能为空")
 
     try:
-        answer, sources = chat_with_rag(request.message)
+        answer, sources, optimization = chat_with_rag(request.message)
         return {
             "answer": answer,
-            "sources": sources
+            "sources": sources,
+            "optimization": {
+                "strategy": optimization["strategy"],
+                "strategy_reason": optimization["strategy_reason"],
+                "strategy_details": optimization["strategy_details"],
+                "optimized_queries": optimization["optimized_queries"],
+            }
         }
     except Exception as e:
         print(f"Chat Error: {e}")

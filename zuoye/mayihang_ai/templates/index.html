@@ -582,6 +582,129 @@
             animation: slideIn 0.3s ease forwards;
         }
 
+        /* Optimization Strategy Badge */
+        .opt-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 4px 10px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            letter-spacing: 0.3px;
+        }
+
+        .opt-badge.rewrite {
+            background: rgba(99, 102, 241, 0.15);
+            color: #a5b4fc;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+        }
+
+        .opt-badge.step-back {
+            background: rgba(16, 185, 129, 0.12);
+            color: #6ee7b7;
+            border: 1px solid rgba(16, 185, 129, 0.25);
+        }
+
+        .opt-badge.decompose {
+            background: rgba(245, 158, 11, 0.12);
+            color: #fcd34d;
+            border: 1px solid rgba(245, 158, 11, 0.25);
+        }
+
+        .opt-badge.combined {
+            background: rgba(139, 92, 246, 0.12);
+            color: #c4b5fd;
+            border: 1px solid rgba(139, 92, 246, 0.25);
+        }
+
+        /* Optimization debug panel */
+        .opt-debug {
+            margin-top: 6px;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 8px;
+            overflow: hidden;
+            background: rgba(139, 92, 246, 0.04);
+        }
+
+        .opt-debug-header {
+            padding: 6px 12px;
+            font-size: 10px;
+            color: #a78bfa;
+            cursor: pointer;
+            background: rgba(139, 92, 246, 0.06);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+            transition: background 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .opt-debug-header:hover {
+            background: rgba(139, 92, 246, 0.1);
+        }
+
+        .opt-debug-header::after {
+            content: "▼";
+            font-size: 7px;
+            transition: transform 0.2s;
+        }
+
+        .opt-debug-header.open::after {
+            transform: rotate(180deg);
+        }
+
+        .opt-debug-content {
+            display: none;
+            padding: 10px 12px;
+            border-top: 1px solid rgba(139, 92, 246, 0.15);
+            font-size: 11px;
+            color: #94a3b8;
+            max-height: 250px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.15);
+        }
+
+        .opt-debug-content.open {
+            display: block;
+        }
+
+        .opt-debug-item {
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.05);
+        }
+
+        .opt-debug-item:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        .opt-debug-label {
+            font-weight: 600;
+            color: #c4b5fd;
+            margin-bottom: 4px;
+            font-size: 11px;
+        }
+
+        .opt-debug-value {
+            color: #94a3b8;
+            line-height: 1.5;
+            font-size: 11px;
+        }
+
+        .opt-debug-reason {
+            color: #64748b;
+            font-style: italic;
+            margin-bottom: 8px;
+            font-size: 10px;
+            line-height: 1.4;
+        }
+
         /* Animations */
         @keyframes fadeIn {
             from {
@@ -834,7 +957,7 @@
 
                 if (response.ok) {
                     const data = await response.json();
-                    renderMessage(data.answer, 'assistant', data.sources);
+                    renderMessage(data.answer, 'assistant', data.sources, data.optimization);
                 } else {
                     const errData = await response.json();
                     renderMessage(`⚠️ 错误：${errData.detail || '问答服务响应异常'}`, 'assistant');
@@ -855,7 +978,7 @@
         });
 
         // Render standard message bubble
-        function renderMessage(text, sender, sources = null) {
+        function renderMessage(text, sender, sources = null, optimization = null) {
             const msgDiv = document.createElement('div');
             msgDiv.className = `message ${sender}`;
 
@@ -866,12 +989,24 @@
             const wrapper = document.createElement('div');
             wrapper.className = 'message-content-wrapper';
 
+            // ---- Optimization Badge (only for assistant messages) ----
+            if (sender === 'assistant' && optimization) {
+                const badge = buildOptimizationBadge(optimization);
+                if (badge) wrapper.appendChild(badge);
+            }
+
             const bubble = document.createElement('div');
             bubble.className = 'message-bubble';
             // Replace newlines with HTML linebreaks for display
             bubble.innerHTML = text.replace(/\n/g, '<br>');
 
             wrapper.appendChild(bubble);
+
+            // ---- Optimization Debug Panel (only for assistant messages) ----
+            if (sender === 'assistant' && optimization) {
+                const debugPanel = buildOptimizationDebugPanel(optimization);
+                if (debugPanel) wrapper.appendChild(debugPanel);
+            }
 
             // If sources exist and are not empty, append sources accordion
             if (sources && sources.length > 0) {
@@ -890,7 +1025,7 @@
                     srcItem.className = 'source-item';
                     srcItem.innerHTML = `
                         <div class="source-meta">
-                            <span class="source-index">#段落切片 ${idx + 1}</span>
+                            <span class="source-index">#段落切片 ${src.index || idx + 1}</span>
                             <span class="source-distance">相似距离: ${src.distance.toFixed(4)}</span>
                         </div>
                         <div class="source-text">${src.content.replace(/\n/g, '<br>')}</div>
@@ -913,6 +1048,121 @@
             msgDiv.appendChild(wrapper);
             chatMessages.appendChild(msgDiv);
             scrollChatToBottom();
+        }
+
+        // Build optimization strategy badge
+        function buildOptimizationBadge(opt) {
+            const strategy = opt.strategy;
+            const badge = document.createElement('div');
+            badge.className = 'opt-badge';
+
+            // Determine badge style and icon based on strategy
+            if (strategy === 'decompose') {
+                badge.classList.add('decompose');
+                badge.innerHTML = '🧩 子查询分解';
+            } else if (strategy === 'step_back+rewrite') {
+                badge.classList.add('combined');
+                badge.innerHTML = '🔍 查询扩展 + 🔄 查询重写';
+            } else if (strategy === 'rewrite+step_back') {
+                badge.classList.add('combined');
+                badge.innerHTML = '🔄 查询重写 + 🔍 查询扩展';
+            } else if (strategy === 'rewrite') {
+                badge.classList.add('rewrite');
+                badge.innerHTML = '🔄 查询重写';
+            } else {
+                badge.classList.add('combined');
+                badge.innerHTML = '⚡ ' + strategy;
+            }
+
+            badge.title = opt.strategy_reason || '';
+            return badge;
+        }
+
+        // Build optimization debug panel with detailed info
+        function buildOptimizationDebugPanel(opt) {
+            const panel = document.createElement('div');
+            panel.className = 'opt-debug';
+
+            const header = document.createElement('div');
+            header.className = 'opt-debug-header';
+            header.textContent = '🔬 检索优化调试信息';
+
+            const content = document.createElement('div');
+            content.className = 'opt-debug-content';
+
+            // Strategy reason
+            if (opt.strategy_reason) {
+                const reasonDiv = document.createElement('div');
+                reasonDiv.className = 'opt-debug-reason';
+                reasonDiv.textContent = '💡 ' + opt.strategy_reason;
+                content.appendChild(reasonDiv);
+            }
+
+            // Optimized queries
+            if (opt.optimized_queries && opt.optimized_queries.length > 0) {
+                const qDiv = document.createElement('div');
+                qDiv.className = 'opt-debug-item';
+                qDiv.innerHTML = '<div class="opt-debug-label">📝 用于检索的查询列表:</div>';
+                const qList = document.createElement('div');
+                qList.className = 'opt-debug-value';
+                opt.optimized_queries.forEach((q, i) => {
+                    qList.innerHTML += `${i + 1}. ${escapeHtml(q)}<br>`;
+                });
+                qDiv.appendChild(qList);
+                content.appendChild(qDiv);
+            }
+
+            // Strategy details
+            const details = opt.strategy_details;
+            if (details) {
+                if (details.rewrite) {
+                    const d = document.createElement('div');
+                    d.className = 'opt-debug-item';
+                    d.innerHTML = `
+                        <div class="opt-debug-label">🔄 查询重写结果:</div>
+                        <div class="opt-debug-value">${escapeHtml(details.rewrite.rewritten_query)}</div>
+                    `;
+                    content.appendChild(d);
+                }
+                if (details.step_back) {
+                    const d = document.createElement('div');
+                    d.className = 'opt-debug-item';
+                    d.innerHTML = `
+                        <div class="opt-debug-label">🔍 后退一步查询:</div>
+                        <div class="opt-debug-value">${escapeHtml(details.step_back.step_back_query)}</div>
+                    `;
+                    content.appendChild(d);
+                }
+                if (details.decompose) {
+                    const d = document.createElement('div');
+                    d.className = 'opt-debug-item';
+                    d.innerHTML = '<div class="opt-debug-label">🧩 子查询列表:</div>';
+                    const subList = document.createElement('div');
+                    subList.className = 'opt-debug-value';
+                    details.decompose.sub_queries.forEach((sq, i) => {
+                        subList.innerHTML += `${i + 1}. ${escapeHtml(sq)}<br>`;
+                    });
+                    d.appendChild(subList);
+                    content.appendChild(d);
+                }
+            }
+
+            header.addEventListener('click', () => {
+                header.classList.toggle('open');
+                content.classList.toggle('open');
+                scrollChatToBottom();
+            });
+
+            panel.appendChild(header);
+            panel.appendChild(content);
+            return panel;
+        }
+
+        // Escape HTML to prevent XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
         // Render loader bubble
